@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>แผนที่บินโดรน LRF Spread A-B</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<title>Drone Flight Plan – LRF Spread A-B</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0f1720;--panel:#16202a;--ink:#e6ecf2;--muted:#94a3b3;--line:#2a3846;--accent:#f5a524;--ok:#3ccf8e;--warn:#fb7a45;
-  --font:"IBM Plex Sans Thai",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+  --font:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font)}
 .app{display:grid;grid-template-rows:auto 1fr;height:100%}
@@ -43,11 +43,11 @@ aside{background:var(--panel);border-left:1px solid var(--line);overflow:auto;pa
 <body>
 <div class="app">
   <header>
-    <div class="top"><h1>แผนที่บินโดรน LRF Spread A-B</h1><span class="prog" id="prog"></span></div>
-    <nav class="days" id="days" aria-label="เลือกวันบิน"></nav>
+    <div class="top"><h1>Drone Flight Plan – LRF Spread A-B</h1><span class="prog" id="prog"></span></div>
+    <nav class="days" id="days" aria-label="Select flight day"></nav>
   </header>
   <div class="main">
-    <div id="map" role="application" aria-label="แผนที่ดาวเทียม"></div>
+    <div id="map" role="application" aria-label="Satellite map"></div>
     <aside><div class="sum" id="sum"></div><div id="list"></div></aside>
   </div>
 </div>
@@ -64,27 +64,27 @@ function at(m){let lo=0,hi=KPK.length-1;if(m<=KPK[0])return{lng:KPP[0][1],lat:KP
 function pathKP(a,b){if(a===b){a-=15;b+=15}const r=[at(a)];for(const p of KPP)if(p[0]>a&&p[0]<b)r.push({lng:p[1],lat:p[2]});r.push(at(b));return r}
 SEGS.forEach(s=>{s.geo=pathKP(s.a,s.b);const c=at((s.a+s.b)/2);s.lat=+c.lat.toFixed(6);s.lon=+c.lng.toFixed(6)});
 const gmPin=s=>`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}`;
-// ===== ตั้งค่าการซิงก์สถานะกับ Google Sheet =====
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxm9K6Tuhsv7BejJ6aq77NDvyn-776suvseRcsoCGWP04mOH2cO9vceCU8Vw8z-gPJ7/exec"; // วาง Web app URL ของ Apps Script ที่นี่ (ลงท้ายด้วย /exec)
+// ===== Google Sheet status sync settings =====
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxm9K6Tuhsv7BejJ6aq77NDvyn-776suvseRcsoCGWP04mOH2cO9vceCU8Vw8z-gPJ7/exec"; // Apps Script Web app URL (ends with /exec)
 // =================================================
 let done={};try{done=JSON.parse(localStorage.getItem("lrf-drone-done")||"{}")}catch(e){}
 const save=()=>{try{localStorage.setItem("lrf-drone-done",JSON.stringify(done))}catch(e){}};
 const ptName=s=>`D${s.d}-${s.n}`;
-let syncMsg=SCRIPT_URL?"กำลังโหลดสถานะ…":"โหมดเครื่องนี้ (ยังไม่ต่อ Sheet)";
+let syncMsg=SCRIPT_URL?"Loading status…":"Local mode (no Sheet)";
 function normDate(v){if(!v)return"✓";const m=/^(\d{4}-\d{2}-\d{2})/.exec(v);if(m)return m[1];const d=new Date(v);if(isNaN(d))return"✓";return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-function applyRemote(r){if(!r||!r.ok)return false;done={};SEGS.forEach(s=>{const p=r.points[ptName(s)];if(p&&p.flown)done[key(s)]=normDate(p.date)});save();syncMsg="ซิงก์ "+r.at.slice(11);return true}
-async function pull(){if(!SCRIPT_URL)return;try{const r=await (await fetch(SCRIPT_URL,{cache:"no-store"})).json();if(applyRemote(r))refreshAll()}catch(e){syncMsg="ออฟไลน์ · แสดงข้อมูลล่าสุดในเครื่อง";updateProg()}}
+function applyRemote(r){if(!r||!r.ok)return false;done={};SEGS.forEach(s=>{const p=r.points[ptName(s)];if(p&&p.flown)done[key(s)]=normDate(p.date)});save();syncMsg="Synced "+r.at.slice(11);return true}
+async function pull(){if(!SCRIPT_URL)return;try{const r=await (await fetch(SCRIPT_URL,{cache:"no-store"})).json();if(applyRemote(r))refreshAll()}catch(e){syncMsg="Offline · showing last saved status";updateProg()}}
 async function push(s,flown){
   if(!SCRIPT_URL){if(flown)done[key(s)]=new Date().toISOString().slice(0,10);else delete done[key(s)];save();refreshAll();return}
   let pin=null;try{pin=localStorage.getItem("lrf-drone-pin")}catch(e){}
-  if(!pin){pin=window.prompt("ใส่ PIN เพื่อบันทึกสถานะ");if(!pin){refreshAll();return}}
-  syncMsg="กำลังบันทึก…";updateProg();
+  if(!pin){pin=window.prompt("Enter PIN to save status");if(!pin){refreshAll();return}}
+  syncMsg="Saving…";updateProg();
   try{const r=await (await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({pin,point:ptName(s),flown})})).json();
-    if(!r.ok){if(/PIN/.test(r.error||"")){try{localStorage.removeItem("lrf-drone-pin")}catch(e){}}window.alert("บันทึกไม่สำเร็จ: "+(r.error||""));syncMsg="บันทึกไม่สำเร็จ";refreshAll();return}
+    if(!r.ok){if(/PIN/.test(r.error||"")){try{localStorage.removeItem("lrf-drone-pin")}catch(e){}}window.alert("Save failed: "+(/PIN/.test(r.error||"")?"incorrect PIN":(r.error||"")));syncMsg="Save failed";refreshAll();return}
     try{localStorage.setItem("lrf-drone-pin",pin)}catch(e){}applyRemote(r);refreshAll()}
-  catch(e){window.alert("ส่งข้อมูลไม่ได้ ตรวจสัญญาณเน็ตแล้วลองใหม่");syncMsg="ออฟไลน์";refreshAll()}
+  catch(e){window.alert("Could not connect. Check your internet signal and try again.");syncMsg="Offline";refreshAll()}
 }
-function updateProg(){const n=SEGS.filter(s=>done[key(s)]).length;const el=document.getElementById("prog");if(el)el.textContent=`บินแล้ว ${n}/${SEGS.length} · ${syncMsg}`}
+function updateProg(){const n=SEGS.filter(s=>done[key(s)]).length;const el=document.getElementById("prog");if(el)el.textContent=`Flown ${n}/${SEGS.length} · ${syncMsg}`}
 function refreshAll(){if(!map)return;SEGS.forEach(s=>{segLines[key(s)].setOptions({strokeColor:color(s)});markers[key(s)].setIcon({path:google.maps.SymbolPath.CIRCLE,scale:15,fillColor:color(s),fillOpacity:1,strokeColor:"#ffffff",strokeWeight:2})});renderList()}
 setInterval(pull,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)pull()});
 let day=0,map,iw,segLines={},markers={},parcelObjs=[];
@@ -116,16 +116,16 @@ function initMap(){
 }
 function toggleParcels(){const show=map.getZoom()>=15;parcelObjs.forEach(o=>{if((o.getMap()!=null)!==show)o.setMap(show?map:null)})}
 function openInfo(s){
-  iw.setContent(`<div class="iw"><b>วันที่ ${s.d} · จุดที่ ${s.n}</b><br>ช่วงบิน <span class="k">KP ${kp(s.a)}–${kp(s.b)}</span> (${(s.b-s.a).toLocaleString()} ม.)<br>
-  เวลาบิน ~${s.t} นาที · แบต #${s.bat}<br>แปลง (${s.p.length}): ${s.p.join(", ")||"-"}${s.demco?'<br><span style="color:#c2410c">มีแปลง Demco</span>':""}<br>
-  <a href="${gmPin(s)}" target="_blank" rel="noopener">📍 เปิดจุดขึ้นบินใน Google Maps</a></div>`);
+  iw.setContent(`<div class="iw"><b>Day ${s.d} · Point ${s.n} (D${s.d}-${s.n})</b><br>Flight segment <span class="k">KP ${kp(s.a)}–${kp(s.b)}</span> (${(s.b-s.a).toLocaleString()} m)<br>
+  Flight time ~${s.t} min · Battery #${s.bat}${done[key(s)]?"<br><b style=\"color:#16a34a\">✓ Flown "+done[key(s)]+"</b>":""}<br>Parcels (${s.p.length}): ${s.p.join(", ")||"-"}${s.demco?'<br><span style="color:#c2410c">Includes Demco parcel(s)</span>':""}<br>
+  <a href="${gmPin(s)}" target="_blank" rel="noopener">📍 Open launch point in Google Maps</a></div>`);
   iw.open({map,anchor:markers[key(s)]});
   document.querySelectorAll(".row").forEach(r=>r.classList.toggle("sel",r.dataset.k===key(s)));
 }
 function fitDay(){const list=day?SEGS.filter(s=>s.d===day):SEGS;const b=new google.maps.LatLngBounds();list.forEach(s=>s.geo.forEach(p=>b.extend(p)));map.fitBounds(b,40)}
 function renderDays(){
   const nav=document.getElementById("days");nav.innerHTML="";
-  [0,...new Set(SEGS.map(s=>s.d))].forEach(d=>{const b=document.createElement("button");b.className="day";b.textContent=d?"วันที่ "+d:"ทั้งหมด";
+  [0,...new Set(SEGS.map(s=>s.d))].forEach(d=>{const b=document.createElement("button");b.className="day";b.textContent=d?"Day "+d:"All";
     if(d)b.style.setProperty("--c",COLORS[d-1]);b.setAttribute("aria-pressed",day===d);b.onclick=()=>{day=d;iw&&iw.close();renderDays();renderList();fitDay();
       SEGS.forEach(s=>{const on=!day||s.d===day;segLines[key(s)].setOptions({strokeOpacity:on?.95:.25});markers[key(s)].setVisible(on)})};nav.appendChild(b)});
 }
@@ -133,19 +133,19 @@ function renderList(){
   const list=day?SEGS.filter(s=>s.d===day):SEGS;
   updateProg();
   const mins=list.reduce((a,s)=>a+s.t,0);
-  document.getElementById("sum").textContent=day?`วันที่ ${day} · KP ${kp(list[0].a)}–${kp(list[list.length-1].b)} · ${list.length} จุด · ~${mins.toFixed(0)} นาที`:`ทั้งแผน · ${list.length} จุดขึ้นบิน · เลือกวันด้านบน`;
+  document.getElementById("sum").textContent=day?`Day ${day} · KP ${kp(list[0].a)}–${kp(list[list.length-1].b)} · ${list.length} points · ~${mins.toFixed(0)} min flight`:`Full plan · ${list.length} launch points · select a day above`;
   const el=document.getElementById("list");el.innerHTML="";
   list.forEach(s=>{const r=document.createElement("div");r.className="row"+(done[key(s)]?" done":"");r.dataset.k=key(s);
-    r.innerHTML=`<input type="checkbox" aria-label="บินแล้ว D${s.d}-${s.n}" ${done[key(s)]?"checked":""}>
-      <div><div class="t"><span class="dot" style="background:${COLORS[s.d-1]}"></span>D${s.d}-${s.n}</div><div class="s">KP ${kp(s.a)}–${kp(s.b)} · ${s.t} น. · แบต #${s.bat}${done[key(s)]?" · บิน "+done[key(s)]:""}</div></div>
+    r.innerHTML=`<input type="checkbox" aria-label="Flown D${s.d}-${s.n}" ${done[key(s)]?"checked":""}>
+      <div><div class="t"><span class="dot" style="background:${COLORS[s.d-1]}"></span>D${s.d}-${s.n}</div><div class="s">KP ${kp(s.a)}–${kp(s.b)} · ${s.t} min · Batt #${s.bat}${done[key(s)]?" · Flown "+done[key(s)]:""}</div></div>
       <a class="gm" href="${gmPin(s)}" target="_blank" rel="noopener">📍 Maps</a>`;
     r.querySelector("input").onclick=e=>{e.stopPropagation();push(s,e.target.checked)};
     r.querySelector("a").onclick=e=>e.stopPropagation();
     r.onclick=()=>{map.panTo({lat:s.lat,lng:s.lon});if(map.getZoom()<14)map.setZoom(15);openInfo(s)};
     el.appendChild(r)});
 }
-window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">โหลด Google Maps ไม่ได้: API key ไม่ถูกต้อง หรือโดเมนนี้ยังไม่ได้รับอนุญาตใน Application restrictions ของ key</div>'};
+window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">Google Maps could not load: the API key is invalid or this website is not allowed in the key\'s Application restrictions.</div>'};
 </script>
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRjDGhKxeiG98etGdHNjDGgAALVYUnaxA&callback=initMap&v=weekly&language=th&region=TH"></script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRjDGhKxeiG98etGdHNjDGgAALVYUnaxA&callback=initMap&v=weekly&language=en&region=TH"></script>
 </body>
 </html>
