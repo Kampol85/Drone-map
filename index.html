@@ -61,6 +61,7 @@ body.printing #pside{display:block;font-size:10pt}
 body.printing #ptable{display:block;break-before:page;page-break-before:always;width:400mm;font-size:8.5pt}
 body.printing #ptable .ptbl td,body.printing #ptable .ptbl th{padding:.5mm 1.4mm;line-height:1.25}
 #pside .ptbl td:nth-child(-n+2){white-space:nowrap}
+.pt2 thead{display:table-header-group}.pt2 tr{break-inside:avoid;page-break-inside:avoid}.pt2{font-size:8pt}.pt2 td.pc{font-size:7pt;width:140mm;line-height:1.2}.pt2 td:nth-child(4),.pt2 td:nth-child(10){white-space:nowrap}.pt2 td:last-child{width:40mm}.pt2 td,.pt2 th{line-height:1.2}
 body.printing #pside{font-size:9.5pt}
 #ptop h2{margin:0;font-size:20pt}#ptop .meta{font-size:10pt;color:#333;text-align:right;line-height:1.5}
 .pbar{height:5mm;background:#e5e7eb;border-radius:3mm;overflow:hidden;margin:2mm 0 4mm}.pbar i{display:block;height:100%;background:#16a34a}
@@ -77,7 +78,7 @@ body.printing #pside{font-size:9.5pt}
 <div class="app">
   <header>
     <div class="top"><h1>Drone Flight Plan – LRF Spread A-B</h1>
-      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.1</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
+      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.2</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
     <nav class="days" id="days" aria-label="Select flight day"></nav>
   </header>
   <button class="btn" id="exitPrint" style="display:none;position:fixed;top:8px;right:8px;z-index:9;background:#111;color:#fff">✕ Close print view</button><div id="printHint" style="display:none;position:fixed;top:44px;right:8px;z-index:9;background:#111;color:#fff;font:12px var(--font);padding:6px 10px;border-radius:6px;max-width:260px">If the print dialog did not open or the map is missing, wait a moment and press ⌘P / Ctrl+P.</div>
@@ -240,7 +241,7 @@ function buildReport(){
   const dates=scope.map(s=>cur(s).date).filter(Boolean).sort();
   document.getElementById("ptop").innerHTML=`<div><h2>Drone Flight Progress – LRF Spread A-B${day?` · Day ${day}`:""}</h2>
     <div style="font-size:11pt;margin-top:1mm">KP ${kp(scope[0].a)} – ${kp(scope[scope.length-1].b)} · ${scope.length} launch points · ${days.length} flight day${days.length>1?"s":""} · DJI Mavic Air 2S</div></div>
-    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.1</div>`;
+    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.2</div>`;
   const rows=days.map(d=>{const l=SEGS.filter(s=>s.d===d),f=l.filter(s=>cur(s).flown),ds=f.map(s=>cur(s).date).filter(Boolean).sort();
     const st=f.length===l.length?'<span class="ok">Done</span>':f.length?'<span class="ip">In progress</span>':"Not started";
     return `<tr><td><span class="sw" style="background:${COLORS[d-1]}"></span>Day ${d}</td><td>${kp(l[0].a)}–${kp(l[l.length-1].b)}</td><td class="r">${f.length}/${l.length}</td><td class="r">${Math.round(f.length/l.length*100)}%</td><td>${ds.length?(ds[0]===ds[ds.length-1]?ds[0]:ds[0]+" → "+ds[ds.length-1]):"–"}</td><td>${st}</td></tr>`}).join("");
@@ -252,8 +253,8 @@ function buildReport(){
     <div><span class="sw" style="background:#fff;border:2px solid #facc15"></span>Launch point moved from plan</div><div><span style="display:inline-block;width:8mm;height:1.5mm;background:#2563eb;vertical-align:middle;margin-right:1.5mm"></span>Flight segment (≤2 km)</div></div>
     <div style="margin-top:4mm;font-size:8.5pt;color:#444">Launch points are planned at the middle of each flight segment unless moved on site. Segment KP from LRF status list (5 Nov 2026); coordinates from 5TP2C KP@100 m.</div>`;
   const trs=scope.map((s,i)=>{const c=cur(s);return`<tr><td class="r">${i+1}</td><td><span class="sw" style="background:${c.flown?"#22c55e":COLORS[s.d-1]}"></span>${s.id}</td><td class="r">${s.d}</td><td>${kp(s.a)} – ${kp(s.b)}</td><td class="r">${(s.b-s.a).toLocaleString()}</td><td class="r">${s.t}</td><td class="r">#${s.bat}</td>
-    <td>${c.flown?'<span class="ok">Flown</span>':"Pending"}</td><td>${esc(c.date)||"–"}</td><td>${c.lat.toFixed(6)}, ${c.lon.toFixed(6)}${moved(s)?" (moved)":""}</td><td>${s.p.length}${s.demco?" (incl. Demco)":""}</td><td>${esc(c.note)}</td></tr>`}).join("");
-  document.getElementById("ptable").innerHTML=`<h3>Launch point status – ${scope.length} points</h3><table class="ptbl"><tr><th>#</th><th>Point</th><th>Day</th><th>KP segment</th><th>Length (m)</th><th>Est. min</th><th>Battery</th><th>Status</th><th>Flown date</th><th>Launch point (Lat, Lon)</th><th>Parcels</th><th>Note</th></tr>${trs}</table>`;
+    <td>${c.flown?'<span class="ok">Flown</span>':"Pending"}</td><td>${esc(c.date)||"–"}</td><td>${c.lat.toFixed(6)}, ${c.lon.toFixed(6)}${moved(s)?" (moved)":""}</td><td class="pc">${s.p.length?`<b>${s.p.length}</b>${s.demco?" (incl. Demco)":""}: `+esc(s.p.join(", ")):"– (no parcel no. in source list)"}</td><td>${esc(c.note)}</td></tr>`}).join("");
+  document.getElementById("ptable").innerHTML=`<h3>Launch point status – ${scope.length} points</h3><table class="ptbl pt2"><thead><tr><th>#</th><th>Point</th><th>Day</th><th>KP segment</th><th>Length (m)</th><th>Est. min</th><th>Batt.</th><th>Status</th><th>Flown date</th><th>Launch point (Lat, Lon)</th><th>Parcel numbers</th><th>Note</th></tr></thead><tbody>${trs}</tbody></table>`;
 }
 let printing=false;
 function printA3(){
