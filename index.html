@@ -52,7 +52,7 @@ aside{background:var(--panel);border-left:1px solid var(--line);overflow:auto;pa
 body.printing{background:#fff;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body.printing .app{display:block;height:auto}
 body.printing header,body.printing aside{display:none}
-body.printing #exitPrint{display:block!important}@media print{body.printing #exitPrint{display:none!important}html,body{background:#fff!important}}
+body.printing #exitPrint,body.printing #printHint{display:block!important}@media print{body.printing #exitPrint,body.printing #printHint{display:none!important}html,body{background:#fff!important}}
 html.printing{background:#fff}
 body.printing #ptop{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #111;padding-bottom:3mm;margin-bottom:4mm;width:400mm}
 body.printing .main{display:grid;grid-template-columns:268mm 128mm;gap:4mm;width:400mm;height:auto}
@@ -70,7 +70,7 @@ body.printing #pside{font-size:9.5pt}
 .leg{display:grid;grid-template-columns:1fr 1fr;gap:1mm 4mm;margin-top:3mm;font-size:9pt}
 #pside h3,#ptable h3{font-size:12pt;margin:0 0 2mm}
 @page{size:A3 landscape;margin:10mm}
-@media print{body:not(.printing) .app{display:none}}
+
 </style>
 </head>
 <body>
@@ -80,7 +80,7 @@ body.printing #pside{font-size:9.5pt}
       <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
     <nav class="days" id="days" aria-label="Select flight day"></nav>
   </header>
-  <button class="btn" id="exitPrint" style="display:none;position:fixed;top:8px;right:8px;z-index:9;background:#111;color:#fff">✕ Close print view</button>
+  <button class="btn" id="exitPrint" style="display:none;position:fixed;top:8px;right:8px;z-index:9;background:#111;color:#fff">✕ Close print view</button><div id="printHint" style="display:none;position:fixed;top:44px;right:8px;z-index:9;background:#111;color:#fff;font:12px var(--font);padding:6px 10px;border-radius:6px;max-width:260px">If the print dialog did not open or the map is missing, wait a moment and press ⌘P / Ctrl+P.</div>
   <div id="ptop"></div>
   <div class="main">
     <div id="map" role="application" aria-label="Satellite map"></div>
@@ -262,7 +262,7 @@ function printA3(){
   setTimeout(()=>{fitDay();google.maps.event.addListenerOnce(map,"idle",()=>setTimeout(()=>window.print(),1500))},400);
 }
 function endPrint(){if(!printing)return;printing=false;document.documentElement.classList.remove("printing");document.body.classList.remove("printing");map.setOptions({disableDefaultUI:false,streetViewControl:false,mapTypeControl:true,fullscreenControl:true});setTimeout(fitDay,300)}
-window.addEventListener("afterprint",endPrint);document.getElementById("exitPrint").onclick=endPrint;
+document.getElementById("exitPrint").onclick=endPrint;
 window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">Google Maps could not load: the API key is invalid or this website is not allowed in the key\'s Application restrictions.</div>'};
 </script>
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRjDGhKxeiG98etGdHNjDGgAALVYUnaxA&callback=initMap&v=weekly&language=en&region=TH"></script>
