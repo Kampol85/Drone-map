@@ -78,7 +78,7 @@ body.printing #pside{font-size:9.5pt}
 <div class="app">
   <header>
     <div class="top"><h1>Drone Flight Plan – LRF Spread A-B</h1>
-      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.4</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
+      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.5</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
     <nav class="days" id="days" aria-label="Select flight day"></nav>
   </header>
   <button class="btn" id="exitPrint" style="display:none;position:fixed;top:8px;right:8px;z-index:9;background:#111;color:#fff">✕ Close print view</button><div id="printHint" style="display:none;position:fixed;top:44px;right:8px;z-index:9;background:#111;color:#fff;font:12px var(--font);padding:6px 10px;border-radius:6px;max-width:260px">If the print dialog did not open or the map is missing, wait a moment and press ⌘P / Ctrl+P.</div>
@@ -144,7 +144,7 @@ const iconFor=s=>({path:google.maps.SymbolPath.CIRCLE,scale:15,fillColor:cur(s).
 function initMap(){
   map=new google.maps.Map(document.getElementById("map"),{mapTypeId:"hybrid",center:{lat:14.0,lng:100.8},zoom:9,gestureHandling:"greedy",streetViewControl:false,fullscreenControl:true,mapTypeControl:true,mapTypeControlOptions:{mapTypeIds:["hybrid","satellite","roadmap"]}});
   iw=new google.maps.InfoWindow();iw.addListener("closeclick",()=>{selId=null;cancelMove();renderList()});
-  new google.maps.Polyline({map,path:KPP.map(p=>({lng:p[1],lat:p[2]})),strokeColor:"#ffffff",strokeOpacity:.55,strokeWeight:2,clickable:false});
+  new google.maps.Polyline({map,path:KPP.map(p=>({lng:p[1],lat:p[2]})),strokeColor:"#ffff00",strokeOpacity:.9,strokeWeight:3,clickable:false});
   SEGS.forEach(s=>{
     segLines[s.id]=new google.maps.Polyline({map,path:s.geo,strokeColor:COLORS[s.d-1],strokeOpacity:.95,strokeWeight:6});
     segLines[s.id].addListener("click",()=>openInfo(s));
@@ -249,7 +249,7 @@ function buildReport(){
   const dates=scope.map(s=>cur(s).date).filter(Boolean).sort();
   document.getElementById("ptop").innerHTML=`<div><h2>Drone Flight Progress – LRF Spread A-B${day?` · Day ${day}`:""}</h2>
     <div style="font-size:11pt;margin-top:1mm">KP ${kp(scope[0].a)} – ${kp(scope[scope.length-1].b)} · ${scope.length} launch points · ${days.length} flight day${days.length>1?"s":""} · DJI Mavic Air 2S</div></div>
-    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.4</div>`;
+    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.5</div>`;
   const rows=days.map(d=>{const l=SEGS.filter(s=>s.d===d),f=l.filter(s=>cur(s).flown),ds=f.map(s=>cur(s).date).filter(Boolean).sort();
     const st=f.length===l.length?'<span class="ok">Done</span>':f.length?'<span class="ip">In progress</span>':"Not started";
     return `<tr><td><span class="sw" style="background:${COLORS[d-1]}"></span>Day ${d}</td><td>${kp(l[0].a)}–${kp(l[l.length-1].b)}</td><td class="r">${f.length}/${l.length}</td><td class="r">${Math.round(f.length/l.length*100)}%</td><td>${ds.length?(ds[0]===ds[ds.length-1]?ds[0]:ds[0]+" → "+ds[ds.length-1]):"–"}</td><td>${st}</td></tr>`}).join("");
@@ -276,7 +276,7 @@ window.addEventListener("beforeprint",()=>{if(!printing&&map){printing=true;canc
 window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">Google Maps could not load: the API key is invalid or this website is not allowed in the key\'s Application restrictions.</div>'};
 </script>
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRjDGhKxeiG98etGdHNjDGgAALVYUnaxA&callback=initMap&v=weekly&language=en&region=TH"></script>
-<!-- ===== Measure tool (v3.4) — paste this whole block just above </body> ===== -->
+<!-- ===== Measure tool (v3.5) — paste this whole block just above </body> ===== -->
 <style>
 .mz{font-family:var(--font);background:rgba(15,23,32,.92);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:10px;min-width:220px;max-width:300px;box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:13px;line-height:1.45}
 .mz .tot{font:700 18px var(--mono);color:var(--accent)}
