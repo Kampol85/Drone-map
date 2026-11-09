@@ -78,7 +78,7 @@ body.printing #pside{font-size:9.5pt}
 <div class="app">
   <header>
     <div class="top"><h1>Drone Flight Plan – LRF Spread A-B</h1>
-      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.2</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
+      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.3</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
     <nav class="days" id="days" aria-label="Select flight day"></nav>
   </header>
   <button class="btn" id="exitPrint" style="display:none;position:fixed;top:8px;right:8px;z-index:9;background:#111;color:#fff">✕ Close print view</button><div id="printHint" style="display:none;position:fixed;top:44px;right:8px;z-index:9;background:#111;color:#fff;font:12px var(--font);padding:6px 10px;border-radius:6px;max-width:260px">If the print dialog did not open or the map is missing, wait a moment and press ⌘P / Ctrl+P.</div>
@@ -241,7 +241,7 @@ function buildReport(){
   const dates=scope.map(s=>cur(s).date).filter(Boolean).sort();
   document.getElementById("ptop").innerHTML=`<div><h2>Drone Flight Progress – LRF Spread A-B${day?` · Day ${day}`:""}</h2>
     <div style="font-size:11pt;margin-top:1mm">KP ${kp(scope[0].a)} – ${kp(scope[scope.length-1].b)} · ${scope.length} launch points · ${days.length} flight day${days.length>1?"s":""} · DJI Mavic Air 2S</div></div>
-    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.2</div>`;
+    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.3</div>`;
   const rows=days.map(d=>{const l=SEGS.filter(s=>s.d===d),f=l.filter(s=>cur(s).flown),ds=f.map(s=>cur(s).date).filter(Boolean).sort();
     const st=f.length===l.length?'<span class="ok">Done</span>':f.length?'<span class="ip">In progress</span>':"Not started";
     return `<tr><td><span class="sw" style="background:${COLORS[d-1]}"></span>Day ${d}</td><td>${kp(l[0].a)}–${kp(l[l.length-1].b)}</td><td class="r">${f.length}/${l.length}</td><td class="r">${Math.round(f.length/l.length*100)}%</td><td>${ds.length?(ds[0]===ds[ds.length-1]?ds[0]:ds[0]+" → "+ds[ds.length-1]):"–"}</td><td>${st}</td></tr>`}).join("");
@@ -268,5 +268,113 @@ window.addEventListener("beforeprint",()=>{if(!printing&&map){printing=true;canc
 window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">Google Maps could not load: the API key is invalid or this website is not allowed in the key\'s Application restrictions.</div>'};
 </script>
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRjDGhKxeiG98etGdHNjDGgAALVYUnaxA&callback=initMap&v=weekly&language=en&region=TH"></script>
+<!-- ===== Measure tool (v3.3) — paste this whole block just above </body> ===== -->
+<style>
+.mz{font-family:var(--font);background:rgba(15,23,32,.92);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:10px;min-width:220px;max-width:300px;box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:13px;line-height:1.45}
+.mz .tot{font:700 18px var(--mono);color:var(--accent)}
+.mz .sub{font:500 12px var(--mono);color:var(--muted)}
+.mz .kp{font:500 12px var(--mono);color:#93c5fd;margin-top:2px}
+.mz .hint{font-size:12px;color:var(--muted);margin-top:2px}
+.mz .acts{display:flex;gap:6px;margin-top:6px}
+.mz button{border:1px solid var(--line);background:#223040;color:var(--ink);border-radius:6px;padding:5px 10px;font:600 12px var(--font);cursor:pointer}
+.mz button.done{background:var(--accent);border-color:var(--accent);color:#111}
+.mz button:disabled{opacity:.4;cursor:default}
+body.printing .mz{display:none}
+</style>
+<script>
+(function(){
+  let on=false,pts=[],verts=[],labels=[],line=null,clickL=null,panel=null,btn=null,saved=[];
+
+  // nearest chainage on the pipeline centreline (KPP) for a point
+  function nearKP(p){
+    const r=Math.PI/180,R=6371000,cx=Math.cos(p.lat*r);
+    const xy=q=>[(q[1]-p.lng)*cx*R*r,(q[2]-p.lat)*R*r];
+    let best=null;
+    for(let i=0;i<KPP.length-1;i++){
+      const [ax,ay]=xy(KPP[i]),[bx,by]=xy(KPP[i+1]),dx=bx-ax,dy=by-ay,L2=dx*dx+dy*dy;
+      let t=L2?-(ax*dx+ay*dy)/L2:0;t=Math.max(0,Math.min(1,t));
+      const px=ax+t*dx,py=ay+t*dy,d=Math.hypot(px,py);
+      if(!best||d<best.d)best={d,m:KPP[i][0]+t*(KPP[i+1][0]-KPP[i][0])};
+    }
+    return best;
+  }
+  const ll=m=>({lat:m.getPosition().lat(),lng:m.getPosition().lng()});
+  let lblIcon=null; // set in init (Google Maps loads after this script)
+
+  function redraw(){
+    pts=verts.map(ll);
+    line.setPath(pts);
+    labels.forEach(l=>l.setMap(null));labels=[];
+    let tot=0,last=0;
+    for(let i=1;i<pts.length;i++){
+      last=dist(pts[i-1],pts[i]);tot+=last;
+      const mid={lat:(pts[i-1].lat+pts[i].lat)/2,lng:(pts[i-1].lng+pts[i].lng)/2};
+      labels.push(new google.maps.Marker({map,position:mid,icon:lblIcon,clickable:false,zIndex:200,
+        label:{text:fmtDist(last),color:"#fde047",fontSize:"12px",fontWeight:"700"}}));
+    }
+    // cumulative total on the last vertex
+    verts.forEach((v,i)=>v.setLabel(i===verts.length-1&&i>0?{text:fmtDist(tot),color:"#ffffff",fontSize:"12px",fontWeight:"700",className:"mzv"}:null));
+    const k=pts.length?nearKP(pts[pts.length-1]):null;
+    panel.querySelector(".tot").textContent=fmtDist(tot);
+    panel.querySelector(".sub").textContent=`${pts.length} point${pts.length===1?"":"s"}${pts.length>1?" · last leg "+fmtDist(last):""}`;
+    panel.querySelector(".kp").textContent=k&&k.d<2000?`Last point ≈ KP ${kp(k.m)} · ${fmtDist(k.d)} off centreline`:"";
+    panel.querySelector(".hint").style.display=pts.length<2?"block":"none";
+    panel.querySelector(".undo").disabled=panel.querySelector(".clr").disabled=!pts.length;
+  }
+  function addPt(latLng){
+    const v=new google.maps.Marker({map,position:latLng,draggable:true,zIndex:201,
+      icon:{path:google.maps.SymbolPath.CIRCLE,scale:6,fillColor:"#f5a524",fillOpacity:1,strokeColor:"#111",strokeWeight:2}});
+    v.addListener("drag",redraw);v.addListener("dragend",redraw);
+    verts.push(v);redraw();
+  }
+  function undo(){const v=verts.pop();if(v)v.setMap(null);redraw()}
+  function clear(){verts.forEach(v=>v.setMap(null));verts=[];redraw()}
+
+  // other map objects swallow clicks, so make them non-clickable while measuring
+  function setOthersClickable(c){
+    if(!c){saved=[];
+      Object.values(segLines).concat(Object.values(markers),parcelObjs).forEach(o=>{if(o.get("clickable")!==false){saved.push(o);o.setOptions({clickable:false})}});
+    }else{saved.forEach(o=>o.setOptions({clickable:true}));saved=[]}
+  }
+  function start(){
+    if(on||!map)return;on=true;
+    if(typeof cancelMove==="function")cancelMove();if(iw)iw.close();
+    btn.classList.add("on");btn.setAttribute("aria-pressed","true");
+    setOthersClickable(false);
+    map.setOptions({draggableCursor:"crosshair",disableDoubleClickZoom:true});
+    line=new google.maps.Polyline({map,path:[],clickable:false,zIndex:199,strokeOpacity:0,
+      icons:[{icon:{path:"M 0,-1 0,1",strokeOpacity:1,strokeColor:"#f5a524",strokeWeight:3,scale:3},offset:"0",repeat:"12px"}]});
+    // fast second tap arrives as "dblclick" instead of "click" — count it too
+    clickL=[map.addListener("click",e=>addPt(e.latLng)),map.addListener("dblclick",e=>addPt(e.latLng))];
+    map.controls[google.maps.ControlPosition.TOP_CENTER].push(panel);panel.style.display="block";
+    redraw();
+  }
+  function stop(){
+    if(!on)return;on=false;
+    clear();line.setMap(null);line=null;clickL.forEach(l=>google.maps.event.removeListener(l));
+    setOthersClickable(true);
+    map.setOptions({draggableCursor:null,disableDoubleClickZoom:false});
+    const c=map.controls[google.maps.ControlPosition.TOP_CENTER],i=c.getArray().indexOf(panel);if(i>=0)c.removeAt(i);
+    btn.classList.remove("on");btn.setAttribute("aria-pressed","false");
+  }
+
+  function init(){
+    lblIcon={path:google.maps.SymbolPath.CIRCLE,scale:0};
+    btn=el("button",{className:"btn",id:"measureBtn",title:"Measure distance"},"📏 Measure");
+    btn.setAttribute("aria-pressed","false");btn.onclick=()=>on?stop():start();
+    const gps=document.getElementById("gpsBtn");gps.parentNode.insertBefore(btn,gps);
+    panel=el("div",{className:"mz"});
+    panel.innerHTML=`<div class="tot">0 m</div><div class="sub"></div><div class="kp"></div>
+      <div class="hint">Tap the map to add points · drag a point to adjust</div>
+      <div class="acts"><button class="undo">↶ Undo</button><button class="clr">Clear</button><button class="done">Done</button></div>`;
+    panel.querySelector(".undo").onclick=undo;panel.querySelector(".clr").onclick=clear;panel.querySelector(".done").onclick=stop;
+    document.addEventListener("keydown",e=>{if(!on||/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;
+      if(e.key==="Escape")stop();else if(e.key==="Backspace"||(e.key==="z"&&(e.ctrlKey||e.metaKey))){e.preventDefault();undo()}});
+    document.getElementById("printBtn").addEventListener("click",stop,true);
+  }
+  (function wait(){if(window.google&&google.maps&&typeof map!=="undefined"&&map)init();else setTimeout(wait,300)})();
+})();
+</script>
+<!-- ===== end Measure tool ===== -->
 </body>
 </html>
