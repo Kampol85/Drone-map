@@ -78,7 +78,7 @@ body.printing #pside{font-size:9.5pt}
 <div class="app">
   <header>
     <div class="top"><h1>Drone Flight Plan – LRF Spread A-B</h1>
-      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.5</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
+      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.6</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
     <nav class="days" id="days" aria-label="Select flight day"></nav>
   </header>
   <button class="btn" id="exitPrint" style="display:none;position:fixed;top:8px;right:8px;z-index:9;background:#111;color:#fff">✕ Close print view</button><div id="printHint" style="display:none;position:fixed;top:44px;right:8px;z-index:9;background:#111;color:#fff;font:12px var(--font);padding:6px 10px;border-radius:6px;max-width:260px">If the print dialog did not open or the map is missing, wait a moment and press ⌘P / Ctrl+P.</div>
@@ -162,6 +162,13 @@ function initMap(){
       label:{text:kp(m),color:km?"#ffffff":"#fde68a",fontSize:km?"11px":"10px",fontWeight:"700"}})})}
   const showKP=()=>{const z=map.getZoom();kpMarks.forEach(o=>{const on=z>=14||(o.km&&z>=12);if((o.mk.getMap()!=null)!==on)o.mk.setMap(on?map:null)})};
   map.addListener("zoom_changed",showKP);showKP();
+  // ---- No-fly zones: 9 km (5 NM) radius around aerodromes (CAAT rule). Coordinates: Wikipedia list of airports in Thailand ----
+  const NFZ=[["VTBD Don Mueang",13.9123861,100.6040472],["VTBS Suvarnabhumi",13.6924194,100.7504972],["VTBI Prachin Buri",14.0777639,101.3798861],
+    ["VTBE Pak Phreaw (Saraburi)",14.5134389,100.9179583],["VTBK Kamphaeng Saen",14.097278,99.9213639]];
+  NFZ.forEach(([n,la,lo])=>{const c={lat:la,lng:lo};
+    new google.maps.Circle({map,center:c,radius:9000,strokeColor:"#ef4444",strokeOpacity:.9,strokeWeight:2,fillColor:"#ef4444",fillOpacity:.12,clickable:false,zIndex:1});
+    new google.maps.Marker({map,position:c,clickable:false,zIndex:2,icon:{path:google.maps.SymbolPath.CIRCLE,scale:0},
+      label:{text:"⛔ "+n+" · No-fly 9 km",color:"#fecaca",fontSize:"12px",fontWeight:"700"}})});
   map.addListener("zoom_changed",()=>{const show=map.getZoom()>=15;parcelObjs.forEach(o=>{if((o.getMap()!=null)!==show)o.setMap(show?map:null)})});
   document.getElementById("printBtn").onclick=printA3;document.getElementById("gpsBtn").onclick=gpsClick;document.getElementById("gpsOff").onclick=stopGps;
   renderDays();renderList();fitDay();pull();
@@ -249,7 +256,7 @@ function buildReport(){
   const dates=scope.map(s=>cur(s).date).filter(Boolean).sort();
   document.getElementById("ptop").innerHTML=`<div><h2>Drone Flight Progress – LRF Spread A-B${day?` · Day ${day}`:""}</h2>
     <div style="font-size:11pt;margin-top:1mm">KP ${kp(scope[0].a)} – ${kp(scope[scope.length-1].b)} · ${scope.length} launch points · ${days.length} flight day${days.length>1?"s":""} · DJI Mavic Air 2S</div></div>
-    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.5</div>`;
+    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.6</div>`;
   const rows=days.map(d=>{const l=SEGS.filter(s=>s.d===d),f=l.filter(s=>cur(s).flown),ds=f.map(s=>cur(s).date).filter(Boolean).sort();
     const st=f.length===l.length?'<span class="ok">Done</span>':f.length?'<span class="ip">In progress</span>':"Not started";
     return `<tr><td><span class="sw" style="background:${COLORS[d-1]}"></span>Day ${d}</td><td>${kp(l[0].a)}–${kp(l[l.length-1].b)}</td><td class="r">${f.length}/${l.length}</td><td class="r">${Math.round(f.length/l.length*100)}%</td><td>${ds.length?(ds[0]===ds[ds.length-1]?ds[0]:ds[0]+" → "+ds[ds.length-1]):"–"}</td><td>${st}</td></tr>`}).join("");
@@ -258,7 +265,7 @@ function buildReport(){
     <div style="margin-bottom:3mm">${dates.length?`First flight: ${dates[0]} · Latest: ${dates[dates.length-1]}`:"No flights recorded yet"}</div>
     <h3>Progress by day</h3><table class="ptbl"><tr><th>Day</th><th>KP range</th><th>Flown</th><th>%</th><th>Flight date(s)</th><th>Status</th></tr>${rows}</table>
     <h3 style="margin-top:4mm">Legend</h3><div class="leg"><div><span class="sw" style="background:#22c55e"></span>Launch point – flown</div><div><span class="sw" style="background:${COLORS[0]}"></span>Launch point – not flown (day colour)</div>
-    <div><span class="sw" style="background:#fff;border:2px solid #facc15"></span>Launch point moved from plan</div><div><span style="display:inline-block;width:8mm;height:1.5mm;background:#2563eb;vertical-align:middle;margin-right:1.5mm"></span>Flight segment (≤2 km)</div></div>
+    <div><span class="sw" style="background:#fff;border:2px solid #facc15"></span>Launch point moved from plan</div><div><span style="display:inline-block;width:8mm;height:1.5mm;background:#2563eb;vertical-align:middle;margin-right:1.5mm"></span>Flight segment (≤2 km)</div><div><span class="sw" style="background:rgba(239,68,68,.25);border:2px solid #ef4444"></span>No-fly zone – 9 km around aerodrome</div></div>
     <div style="margin-top:4mm;font-size:8.5pt;color:#444">Launch points are planned at the middle of each flight segment unless moved on site. Segment KP from LRF status list (5 Nov 2026); coordinates from 5TP2C KP@100 m.</div>`;
   const trs=scope.map((s,i)=>{const c=cur(s);return`<tr><td class="r">${i+1}</td><td><span class="sw" style="background:${c.flown?"#22c55e":COLORS[s.d-1]}"></span>${s.id}</td><td class="r">${s.d}</td><td>${kp(s.a)} – ${kp(s.b)}</td><td class="r">${(s.b-s.a).toLocaleString()}</td><td class="r">${s.t}</td><td class="r">#${s.bat}</td>
     <td>${c.flown?'<span class="ok">Flown</span>':"Pending"}</td><td>${esc(c.date)||"–"}</td><td>${c.lat.toFixed(6)}, ${c.lon.toFixed(6)}${moved(s)?" (moved)":""}</td><td class="pc">${s.p.length?`<b>${s.p.length}</b>${s.demco?" (incl. Demco)":""}: `+esc(s.p.join(", ")):"– (no parcel no. in source list)"}</td><td>${esc(c.note)}</td></tr>`}).join("");
@@ -276,7 +283,7 @@ window.addEventListener("beforeprint",()=>{if(!printing&&map){printing=true;canc
 window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">Google Maps could not load: the API key is invalid or this website is not allowed in the key\'s Application restrictions.</div>'};
 </script>
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRjDGhKxeiG98etGdHNjDGgAALVYUnaxA&callback=initMap&v=weekly&language=en&region=TH"></script>
-<!-- ===== Measure tool (v3.5) — paste this whole block just above </body> ===== -->
+<!-- ===== Measure tool (v3.6) — paste this whole block just above </body> ===== -->
 <style>
 .mz{font-family:var(--font);background:rgba(15,23,32,.92);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:10px;min-width:220px;max-width:300px;box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:13px;line-height:1.45}
 .mz .tot{font:700 18px var(--mono);color:var(--accent)}
