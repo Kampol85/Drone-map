@@ -70,6 +70,7 @@ body.printing #pside{font-size:9.5pt}
 .sw{display:inline-block;width:3.5mm;height:3.5mm;border-radius:50%;vertical-align:middle;margin-right:1.5mm;border:1px solid #333}
 .leg{display:grid;grid-template-columns:1fr 1fr;gap:1mm 4mm;margin-top:3mm;font-size:9pt}
 #pside h3,#ptable h3{font-size:12pt;margin:0 0 2mm}
+body.printing #map,body.printing #map *{will-change:auto!important}
 @page{size:A3 landscape;margin:10mm}
 
 </style>
@@ -78,7 +79,7 @@ body.printing #pside{font-size:9.5pt}
 <div class="app">
   <header>
     <div class="top"><h1>Drone Flight Plan – LRF Spread A-B</h1>
-      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.6</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
+      <div class="right"><span class="pend" id="pend"></span><span class="prog" id="prog"></span><span class="prog" style="opacity:.6">v3.7</span><button class="btn" id="printBtn">🖨 Print A3</button><button class="btn" id="gpsBtn" aria-pressed="false">◎ My location</button><button class="btn" id="gpsOff" style="display:none" aria-label="Stop location">✕</button></div></div>
     <nav class="days" id="days" aria-label="Select flight day"></nav>
   </header>
   <button class="btn" id="exitPrint" style="display:none;position:fixed;top:8px;right:8px;z-index:9;background:#111;color:#fff">✕ Close print view</button><div id="printHint" style="display:none;position:fixed;top:44px;right:8px;z-index:9;background:#111;color:#fff;font:12px var(--font);padding:6px 10px;border-radius:6px;max-width:260px">If the print dialog did not open or the map is missing, wait a moment and press ⌘P / Ctrl+P.</div>
@@ -256,7 +257,7 @@ function buildReport(){
   const dates=scope.map(s=>cur(s).date).filter(Boolean).sort();
   document.getElementById("ptop").innerHTML=`<div><h2>Drone Flight Progress – LRF Spread A-B${day?` · Day ${day}`:""}</h2>
     <div style="font-size:11pt;margin-top:1mm">KP ${kp(scope[0].a)} – ${kp(scope[scope.length-1].b)} · ${scope.length} launch points · ${days.length} flight day${days.length>1?"s":""} · DJI Mavic Air 2S</div></div>
-    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.6</div>`;
+    <div class="meta">Printed: ${stamp}<br>Status data: ${esc(syncMsg)}${queue.length?` · <b>${queue.length} change(s) not yet synced</b>`:""}<br>Prepared by: Kampol Meekaew · app v3.7</div>`;
   const rows=days.map(d=>{const l=SEGS.filter(s=>s.d===d),f=l.filter(s=>cur(s).flown),ds=f.map(s=>cur(s).date).filter(Boolean).sort();
     const st=f.length===l.length?'<span class="ok">Done</span>':f.length?'<span class="ip">In progress</span>':"Not started";
     return `<tr><td><span class="sw" style="background:${COLORS[d-1]}"></span>Day ${d}</td><td>${kp(l[0].a)}–${kp(l[l.length-1].b)}</td><td class="r">${f.length}/${l.length}</td><td class="r">${Math.round(f.length/l.length*100)}%</td><td>${ds.length?(ds[0]===ds[ds.length-1]?ds[0]:ds[0]+" → "+ds[ds.length-1]):"–"}</td><td>${st}</td></tr>`}).join("");
@@ -275,15 +276,23 @@ let printing=false;
 function printA3(){
   if(printing||!map)return;printing=true;cancelMove();iw.close();buildReport();
   document.documentElement.classList.add("printing");document.body.classList.add("printing");map.setOptions({disableDefaultUI:true});
-  setTimeout(()=>{fitDay();google.maps.event.addListenerOnce(map,"idle",()=>setTimeout(()=>window.print(),1500))},400);
+  window.scrollTo(0,0);
+  setTimeout(()=>{fitDay();google.maps.event.addListenerOnce(map,"idle",()=>waitTiles(()=>window.print()))},400);
 }
+// resolve when all map tile images are loaded and nothing changed for 1 s (max 12 s)
+function waitTiles(cb){const t0=Date.now();let last=-1,stable=0;
+  (function tick(){const im=[...document.querySelectorAll("#map img")];const pend=im.filter(i=>!(i.complete&&i.naturalWidth)).length;
+    stable=(pend===0&&im.length===last)?stable+1:0;last=im.length;
+    if(stable>=4||Date.now()-t0>12000)setTimeout(cb,300);else setTimeout(tick,250)})()}
+// ⌘P / Ctrl+P goes through the same preparation as the Print A3 button
+document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&!e.altKey&&e.key.toLowerCase()==="p"&&!printing&&map){e.preventDefault();printA3()}});
 function endPrint(){if(!printing)return;printing=false;document.documentElement.classList.remove("printing");document.body.classList.remove("printing");map.setOptions({disableDefaultUI:false,streetViewControl:false,mapTypeControl:true,fullscreenControl:true});setTimeout(fitDay,300)}
 document.getElementById("exitPrint").onclick=endPrint;
 window.addEventListener("beforeprint",()=>{if(!printing&&map){printing=true;cancelMove();iw.close();buildReport();document.documentElement.classList.add("printing");document.body.classList.add("printing");map.setOptions({disableDefaultUI:true});fitDay()}});
 window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">Google Maps could not load: the API key is invalid or this website is not allowed in the key\'s Application restrictions.</div>'};
 </script>
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRjDGhKxeiG98etGdHNjDGgAALVYUnaxA&callback=initMap&v=weekly&language=en&region=TH"></script>
-<!-- ===== Measure tool (v3.6) — paste this whole block just above </body> ===== -->
+<!-- ===== Measure tool (v3.7) — paste this whole block just above </body> ===== -->
 <style>
 .mz{font-family:var(--font);background:rgba(15,23,32,.92);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:10px;min-width:220px;max-width:300px;box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:13px;line-height:1.45}
 .mz .tot{font:700 18px var(--mono);color:var(--accent)}
