@@ -8,8 +8,8 @@
   var DATA_URL = "parcels.json";
   var STYLE = {
     1: { fillOpacity: 0,    strokeColor: "#ffffff", fillColor: "#ffffff" },
-    2: { fillOpacity: 0.35, strokeColor: "#facc15", fillColor: "#facc15" },
-    3: { fillOpacity: 0.35, strokeColor: "#16a34a", fillColor: "#16a34a" }
+    2: { fillOpacity: 0.12, strokeColor: "#facc15", fillColor: "#facc15" },
+    3: { fillOpacity: 0.12, strokeColor: "#22c55e", fillColor: "#22c55e" }
   };
 
   function ready() {
@@ -25,8 +25,8 @@
 
     layer.setStyle(function (f) {
       var s = STYLE[f.getProperty("s")] || STYLE[1];
-      return { strokeColor: s.strokeColor, strokeOpacity: 0.95, strokeWeight: 1.2,
-               fillColor: s.fillColor, fillOpacity: s.fillOpacity, zIndex: 1 };
+      return { strokeColor: s.strokeColor, strokeOpacity: 0.45, strokeWeight: 0.8,
+               fillColor: s.fillColor, fillOpacity: s.fillOpacity, zIndex: -100 };
     });
     layer.addListener("click", function (e) {
       var n = e.feature.getProperty("n") || "-";
@@ -59,9 +59,9 @@
         var c = centers[i];
         if (!b.contains(c)) continue;
         labels.push(new google.maps.Marker({
-          position: c, map: gmap, clickable: false, zIndex: 2,
+          position: c, map: gmap, clickable: false, zIndex: -100, opacity: 0.75,
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0 },
-          label: { text: c.n, color: "#ffffff", fontSize: "11px", fontWeight: "600",
+          label: { text: c.n, color: "#e5e7eb", fontSize: "10px", fontWeight: "400",
                    className: "parcel-num-label" }
         }));
       }
@@ -75,7 +75,7 @@
     gmap.addListener("idle", update);
 
     var css = document.createElement("style");
-    css.textContent = ".parcel-num-label{text-shadow:0 0 3px #000,0 0 3px #000,0 0 2px #000}";
+    css.textContent = ".parcel-num-label{text-shadow:0 0 2px #000,0 0 2px #000}";
     document.head.appendChild(css);
 
     var box = document.createElement("div");
