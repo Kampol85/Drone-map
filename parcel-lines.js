@@ -53,7 +53,7 @@
 
     function drawLabels() {
       clearLabels();
-      if (!visible || gmap.getZoom() < LABEL_ZOOM) return;
+      if (!visible || gmap.getZoom() < LABEL_ZOOM || gmap.getStreetView().getVisible()) return;
       var b = gmap.getBounds(); if (!b) return;
       for (var i = 0; i < centers.length && labels.length < MAX_LABELS; i++) {
         var c = centers[i];
@@ -73,6 +73,7 @@
       drawLabels();
     }
     gmap.addListener("idle", update);
+    gmap.getStreetView().addListener("visible_changed", drawLabels);
 
     var css = document.createElement("style");
     css.textContent = ".parcel-num-label{text-shadow:0 0 2px #000,0 0 2px #000}.pnum{text-shadow:0 0 3px #000,0 0 3px #000,0 0 2px #000}";

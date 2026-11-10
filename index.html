@@ -143,7 +143,7 @@ window.addEventListener("online",()=>pull());
 let day=0,map,iw,segLines={},markers={},parcelObjs=[],selId=null,me=null,meMarker=null,meCircle=null,watchId=null,firstFix=true;
 const iconFor=s=>({path:google.maps.SymbolPath.CIRCLE,scale:15,fillColor:cur(s).flown?"#22c55e":COLORS[s.d-1],fillOpacity:1,strokeColor:moved(s)?"#facc15":"#ffffff",strokeWeight:moved(s)?4:2});
 function initMap(){
-  map=new google.maps.Map(document.getElementById("map"),{mapTypeId:"hybrid",center:{lat:14.0,lng:100.8},zoom:9,gestureHandling:"greedy",streetViewControl:false,fullscreenControl:true,mapTypeControl:true,mapTypeControlOptions:{mapTypeIds:["hybrid","satellite","roadmap"]}});
+  map=new google.maps.Map(document.getElementById("map"),{mapTypeId:"hybrid",center:{lat:14.0,lng:100.8},zoom:9,gestureHandling:"greedy",streetViewControl:true,streetViewControlOptions:{position:google.maps.ControlPosition.RIGHT_BOTTOM},fullscreenControl:true,mapTypeControl:true,mapTypeControlOptions:{mapTypeIds:["hybrid","satellite","roadmap"]}});
   iw=new google.maps.InfoWindow();iw.addListener("closeclick",()=>{selId=null;cancelMove();renderList()});
   new google.maps.Polyline({map,path:KPP.map(p=>({lng:p[1],lat:p[2]})),strokeColor:"#ff0000",strokeOpacity:.9,strokeWeight:1.5,clickable:false});
   SEGS.forEach(s=>{
@@ -286,7 +286,7 @@ function waitTiles(cb){const t0=Date.now();let last=-1,stable=0;
     if(stable>=4||Date.now()-t0>12000)setTimeout(cb,300);else setTimeout(tick,250)})()}
 // ⌘P / Ctrl+P goes through the same preparation as the Print A3 button
 document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&!e.altKey&&e.key.toLowerCase()==="p"&&!printing&&map){e.preventDefault();printA3()}});
-function endPrint(){if(!printing)return;printing=false;document.documentElement.classList.remove("printing");document.body.classList.remove("printing");map.setOptions({disableDefaultUI:false,streetViewControl:false,mapTypeControl:true,fullscreenControl:true});setTimeout(fitDay,300)}
+function endPrint(){if(!printing)return;printing=false;document.documentElement.classList.remove("printing");document.body.classList.remove("printing");map.setOptions({disableDefaultUI:false,streetViewControl:true,streetViewControlOptions:{position:google.maps.ControlPosition.RIGHT_BOTTOM},mapTypeControl:true,fullscreenControl:true});setTimeout(fitDay,300)}
 document.getElementById("exitPrint").onclick=endPrint;
 window.addEventListener("beforeprint",()=>{if(!printing&&map){printing=true;cancelMove();iw.close();buildReport();document.documentElement.classList.add("printing");document.body.classList.add("printing");map.setOptions({disableDefaultUI:true});fitDay()}});
 window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">Google Maps could not load: the API key is invalid or this website is not allowed in the key\'s Application restrictions.</div>'};
@@ -400,6 +400,6 @@ body.printing .mz{display:none}
 })();
 </script>
 <!-- ===== end Measure tool ===== -->
-<script src="parcel-lines.js?v=c5"></script>
+<script src="parcel-lines.js?v=c6"></script>
 </body>
 </html>
