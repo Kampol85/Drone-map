@@ -72,6 +72,8 @@ body.printing #pside{font-size:9.5pt}
 #pside h3,#ptable h3{font-size:12pt;margin:0 0 2mm}
 body.printing #map,body.printing #map *{will-change:auto!important}
 @page{size:A3 landscape;margin:10mm}
+html.printing,body.printing{height:auto!important;overflow:visible!important}
+@media print{body.printing{zoom:1!important}}
 
 </style>
 </head>
@@ -277,16 +279,20 @@ function printA3(){
   if(printing||!map)return;printing=true;cancelMove();iw.close();buildReport();
   document.documentElement.classList.add("printing");document.body.classList.add("printing");map.setOptions({disableDefaultUI:true});
   window.scrollTo(0,0);
-  setTimeout(()=>{fitDay();google.maps.event.addListenerOnce(map,"idle",()=>waitTiles(()=>window.print()))},400);
+  setTimeout(()=>{fitDay();google.maps.event.addListenerOnce(map,"idle",()=>{fitPreview();setTimeout(()=>waitTiles(()=>window.print()),600)})},400);
 }
+// scale the print layout down on screen so the whole A3 map is inside the window while tiles load
+// (Google Maps skips tiles that are off-screen, which left grey gaps in the printout). Reset to 1 by @media print.
+function fitPreview(){const b=document.body;b.style.zoom="";const w=b.scrollWidth,h=document.getElementById("map").getBoundingClientRect().bottom+20;
+  const z=Math.min(1,innerWidth/w,innerHeight/h);if(z<1)b.style.zoom=String(Math.floor(z*100)/100)}
 // resolve when all map tile images are loaded and nothing changed for 1 s (max 12 s)
 function waitTiles(cb){const t0=Date.now();let last=-1,stable=0;
   (function tick(){const im=[...document.querySelectorAll("#map img")];const pend=im.filter(i=>!(i.complete&&i.naturalWidth)).length;
     stable=(pend===0&&im.length===last)?stable+1:0;last=im.length;
-    if(stable>=4||Date.now()-t0>12000)setTimeout(cb,300);else setTimeout(tick,250)})()}
+    if(stable>=6||Date.now()-t0>20000)setTimeout(cb,300);else setTimeout(tick,250)})()}
 // ⌘P / Ctrl+P goes through the same preparation as the Print A3 button
 document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&!e.altKey&&e.key.toLowerCase()==="p"&&!printing&&map){e.preventDefault();printA3()}});
-function endPrint(){if(!printing)return;printing=false;document.documentElement.classList.remove("printing");document.body.classList.remove("printing");map.setOptions({disableDefaultUI:false,streetViewControl:true,streetViewControlOptions:{position:google.maps.ControlPosition.RIGHT_BOTTOM},mapTypeControl:true,fullscreenControl:true});setTimeout(fitDay,300)}
+function endPrint(){if(!printing)return;printing=false;document.body.style.zoom="";document.documentElement.classList.remove("printing");document.body.classList.remove("printing");map.setOptions({disableDefaultUI:false,streetViewControl:true,streetViewControlOptions:{position:google.maps.ControlPosition.RIGHT_BOTTOM},mapTypeControl:true,fullscreenControl:true});setTimeout(fitDay,300)}
 document.getElementById("exitPrint").onclick=endPrint;
 window.addEventListener("beforeprint",()=>{if(!printing&&map){printing=true;cancelMove();iw.close();buildReport();document.documentElement.classList.add("printing");document.body.classList.add("printing");map.setOptions({disableDefaultUI:true});fitDay()}});
 window.gm_authFailure=()=>{document.getElementById("map").innerHTML='<div class="err">Google Maps could not load: the API key is invalid or this website is not allowed in the key\'s Application restrictions.</div>'};
