@@ -154,7 +154,7 @@ function initMap(){
   });
   PARCELS.forEach(p=>{const mid=at((p[1]+p[2])/2);
     parcelObjs.push(new google.maps.Polyline({path:pathKP(p[1],p[2]),strokeColor:p[3]?"#ef4444":"#facc15",strokeOpacity:.9,strokeWeight:3,zIndex:5}),
-      new google.maps.Marker({position:mid,icon:{path:google.maps.SymbolPath.CIRCLE,scale:0},label:{text:p[0],color:p[3]?"#fecaca":"#fef08a",fontSize:"11px",fontWeight:"600"},clickable:false,zIndex:1}))});
+      new google.maps.Marker({position:mid,icon:{path:google.maps.SymbolPath.CIRCLE,scale:1,fillOpacity:0,strokeOpacity:0,labelOrigin:new google.maps.Point(0,15)},label:{text:p[0],color:"#ffffff",fontSize:"11px",fontWeight:"700",className:"pnum"},clickable:false,zIndex:4}))});
   // ---- KP labels every 500 m (whole km from zoom 12, every 500 m from zoom 14) ----
   const kpMarks=[];
   for(let m=Math.ceil(KPK[0]/500)*500;m<=KPK[KPK.length-1];m+=500){const km=m%1000===0;
@@ -400,6 +400,6 @@ body.printing .mz{display:none}
 })();
 </script>
 <!-- ===== end Measure tool ===== -->
-<script src="parcel-lines.js?v=c2"></script>
+<script src="parcel-lines.js?v=c3"></script>
 </body>
 </html>

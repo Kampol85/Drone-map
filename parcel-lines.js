@@ -8,8 +8,8 @@
   var DATA_URL = "parcels.json";
   var STYLE = {
     1: { fillOpacity: 0,    strokeColor: "#ffffff", fillColor: "#ffffff" },
-    2: { fillOpacity: 0.12, strokeColor: "#38bdf8", fillColor: "#38bdf8" },
-    3: { fillOpacity: 0.12, strokeColor: "#e879f9", fillColor: "#e879f9" }
+    2: { fillOpacity: 0.32, strokeColor: "#38bdf8", fillColor: "#38bdf8" },
+    3: { fillOpacity: 0.32, strokeColor: "#e879f9", fillColor: "#e879f9" }
   };
 
   function ready() {
@@ -25,7 +25,7 @@
 
     layer.setStyle(function (f) {
       var s = STYLE[f.getProperty("s")] || STYLE[1];
-      return { strokeColor: s.strokeColor, strokeOpacity: 0.45, strokeWeight: 0.8,
+      return { strokeColor: s.strokeColor, strokeOpacity: 0.75, strokeWeight: 1.6,
                fillColor: s.fillColor, fillOpacity: s.fillOpacity, zIndex: -100 };
     });
     layer.addListener("click", function (e) {
@@ -75,7 +75,7 @@
     gmap.addListener("idle", update);
 
     var css = document.createElement("style");
-    css.textContent = ".parcel-num-label{text-shadow:0 0 2px #000,0 0 2px #000}";
+    css.textContent = ".parcel-num-label{text-shadow:0 0 2px #000,0 0 2px #000}.pnum{text-shadow:0 0 3px #000,0 0 3px #000,0 0 2px #000}";
     document.head.appendChild(css);
 
     var box = document.createElement("div");
