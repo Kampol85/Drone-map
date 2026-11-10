@@ -76,10 +76,11 @@
     gmap.getStreetView().addListener("visible_changed", drawLabels);
 
     var css = document.createElement("style");
-    css.textContent = ".parcel-num-label{text-shadow:0 0 2px #000,0 0 2px #000}.pnum{text-shadow:0 0 3px #000,0 0 3px #000,0 0 2px #000}";
+    css.textContent = ".parcel-num-label{text-shadow:0 0 2px #000,0 0 2px #000}.pnum{text-shadow:0 0 3px #000,0 0 3px #000,0 0 2px #000}body.printing .parcel-ctl{display:none!important}";
     document.head.appendChild(css);
 
     var box = document.createElement("div");
+    box.className = "parcel-ctl";
     box.style.cssText = "background:#fff;margin:10px;padding:6px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.3);font:12px sans-serif;color:#111;user-select:none";
     box.innerHTML =
       '<label style="cursor:pointer;font-weight:600"><input type="checkbox" checked style="vertical-align:middle;margin-right:6px">รูปแปลงที่ดิน</label>' +
