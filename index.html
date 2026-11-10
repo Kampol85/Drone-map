@@ -152,7 +152,7 @@ function initMap(){
     const c=cur(s);const m=new google.maps.Marker({map,position:{lat:c.lat,lng:c.lon},title:s.id,label:{text:s.id,color:"#ffffff",fontSize:"12px",fontWeight:"700"},icon:iconFor(s),zIndex:10});
     m.addListener("click",()=>openInfo(s));m.addListener("dragend",()=>{if(moving&&moving.id===s.id)openInfo(s)});markers[s.id]=m;
   });
-  const pnSlot={};PARCELS.forEach(p=>{const mid=at((p[1]+p[2])/2);const pk=Math.round((p[1]+p[2])/2/10);const slot=pnSlot[pk]=(pnSlot[pk]===undefined?0:pnSlot[pk]+1);
+  const pnSlot=new Map();{let lastK=-1e9,lastS=-1;PARCELS.slice().sort((a,b)=>(a[1]+a[2])-(b[1]+b[2])).forEach(p=>{const k=(p[1]+p[2])/2;lastS=(k-lastK<40)?lastS+1:0;if(lastS===0)lastK=k;pnSlot.set(p,lastS)})}PARCELS.forEach(p=>{const mid=at((p[1]+p[2])/2);const slot=pnSlot.get(p)||0;
     parcelObjs.push(new google.maps.Polyline({path:pathKP(p[1],p[2]),strokeColor:p[3]?"#ef4444":"#facc15",strokeOpacity:.9,strokeWeight:3,zIndex:5}),
       new google.maps.Marker({position:mid,icon:{path:google.maps.SymbolPath.CIRCLE,scale:1,fillOpacity:0,strokeOpacity:0,labelOrigin:new google.maps.Point(0,15+slot*13)},label:{text:p[0],color:"#ffffff",fontSize:"11px",fontWeight:"700",className:"pnum"},clickable:false,zIndex:4}))});
   // ---- KP labels every 500 m (whole km from zoom 12, every 500 m from zoom 14) ----
@@ -400,6 +400,6 @@ body.printing .mz{display:none}
 })();
 </script>
 <!-- ===== end Measure tool ===== -->
-<script src="parcel-lines.js?v=c4"></script>
+<script src="parcel-lines.js?v=c5"></script>
 </body>
 </html>
