@@ -145,7 +145,7 @@ const iconFor=s=>({path:google.maps.SymbolPath.CIRCLE,scale:15,fillColor:cur(s).
 function initMap(){
   map=new google.maps.Map(document.getElementById("map"),{mapTypeId:"hybrid",center:{lat:14.0,lng:100.8},zoom:9,gestureHandling:"greedy",streetViewControl:false,fullscreenControl:true,mapTypeControl:true,mapTypeControlOptions:{mapTypeIds:["hybrid","satellite","roadmap"]}});
   iw=new google.maps.InfoWindow();iw.addListener("closeclick",()=>{selId=null;cancelMove();renderList()});
-  new google.maps.Polyline({map,path:KPP.map(p=>({lng:p[1],lat:p[2]})),strokeColor:"#ffff00",strokeOpacity:.9,strokeWeight:3,clickable:false});
+  new google.maps.Polyline({map,path:KPP.map(p=>({lng:p[1],lat:p[2]})),strokeColor:"#ff0000",strokeOpacity:.9,strokeWeight:1.5,clickable:false});
   SEGS.forEach(s=>{
     segLines[s.id]=new google.maps.Polyline({map,path:s.geo,strokeColor:COLORS[s.d-1],strokeOpacity:.95,strokeWeight:6});
     segLines[s.id].addListener("click",()=>openInfo(s));
@@ -400,6 +400,6 @@ body.printing .mz{display:none}
 })();
 </script>
 <!-- ===== end Measure tool ===== -->
-<script src="parcel-lines.js?v=4590ef3"></script>
+<script src="parcel-lines.js?v=c2"></script>
 </body>
 </html>

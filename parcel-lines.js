@@ -8,8 +8,8 @@
   var DATA_URL = "parcels.json";
   var STYLE = {
     1: { fillOpacity: 0,    strokeColor: "#ffffff", fillColor: "#ffffff" },
-    2: { fillOpacity: 0.12, strokeColor: "#facc15", fillColor: "#facc15" },
-    3: { fillOpacity: 0.12, strokeColor: "#22c55e", fillColor: "#22c55e" }
+    2: { fillOpacity: 0.12, strokeColor: "#38bdf8", fillColor: "#38bdf8" },
+    3: { fillOpacity: 0.12, strokeColor: "#e879f9", fillColor: "#e879f9" }
   };
 
   function ready() {
@@ -84,8 +84,8 @@
       '<label style="cursor:pointer;font-weight:600"><input type="checkbox" checked style="vertical-align:middle;margin-right:6px">รูปแปลงที่ดิน</label>' +
       '<div style="margin-top:4px;line-height:1.6">' +
       '<span style="display:inline-block;width:10px;height:10px;border:1.5px solid #888;margin-right:4px"></span>สถานะ 1 ' +
-      '<span style="display:inline-block;width:10px;height:10px;background:#facc15;margin:0 4px 0 8px"></span>2 ' +
-      '<span style="display:inline-block;width:10px;height:10px;background:#16a34a;margin:0 4px 0 8px"></span>3</div>';
+      '<span style="display:inline-block;width:10px;height:10px;background:#38bdf8;margin:0 4px 0 8px"></span>2 ' +
+      '<span style="display:inline-block;width:10px;height:10px;background:#e879f9;margin:0 4px 0 8px"></span>3</div>';
     box.querySelector("input").addEventListener("change", function (e) { visible = e.target.checked; update(); });
     gmap.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(box);
   }
