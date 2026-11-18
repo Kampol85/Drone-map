@@ -107,6 +107,7 @@ const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxm9K6Tuhsv7BejJ6aq77N
 const COLORS=["#2563eb","#06b6d4","#10b981","#84cc16","#eab308","#f97316","#ef4444","#d946ef","#8b5cf6","#94a3b8"];
 const kp=m=>Math.floor(m/1000)+"+"+String(Math.round(m)%1000).padStart(3,"0");
 const KPK=KPP.map(p=>p[0]);
+const segLen=s=>s.b>s.a?(s.b-s.a).toLocaleString()+" m":"single spot (~30 m)";
 function at(m){let lo=0,hi=KPK.length-1;if(m<=KPK[0])return{lng:KPP[0][1],lat:KPP[0][2]};if(m>=KPK[hi])return{lng:KPP[hi][1],lat:KPP[hi][2]};
   while(hi-lo>1){const mid=(lo+hi)>>1;if(KPK[mid]<=m)lo=mid;else hi=mid}const a=KPP[lo],b=KPP[hi],t=(m-a[0])/(b[0]-a[0]);return{lng:a[1]+t*(b[1]-a[1]),lat:a[2]+t*(b[2]-a[2])}}
 function pathKP(a,b){if(a===b){a-=15;b+=15}const r=[at(a)];for(const p of KPP)if(p[0]>a&&p[0]<b)r.push({lng:p[1],lat:p[2]});r.push(at(b));return r}
@@ -193,7 +194,7 @@ function resetMove(s){if(!window.confirm(`Reset ${s.id} to the planned launch po
 function el(tag,attrs,text){const e=document.createElement(tag);Object.assign(e,attrs||{});if(text!=null)e.textContent=text;return e}
 function openInfo(s){
   selId=s.id;const c=cur(s);const box=el("div",{className:"iw"});
-  box.innerHTML=`<b>Day ${s.d} · Point ${s.n} (${s.id})</b><br>Flight segment <span class="k">KP ${kp(s.a)}–${kp(s.b)}</span> (${(s.b-s.a).toLocaleString()} m)<br>
+  box.innerHTML=`<b>Day ${s.d} · Point ${s.n} (${s.id})</b><br>Flight segment <span class="k">KP ${kp(s.a)}–${kp(s.b)}</span> · length <b>${segLen(s)}</b><br>
   Flight time ~${s.t} min · Battery #${s.bat}${c.flown?`<br><b style="color:#16a34a">✓ Flown ${c.date}</b>`:""}${moved(s)?`<br><span class="flag">📌 Launch point moved from plan</span>`:""}
   ${me?`<br>Distance from you: <b>${fmtDist(dist(me,{lat:c.lat,lng:c.lon}))}</b>`:""}<br>Parcels (${s.p.length}): ${s.p.join(", ")||"-"}${s.demco?'<br><span style="color:#c2410c">Includes Demco parcel(s)</span>':""}`;
   const acts=el("div",{className:"acts"});
@@ -242,13 +243,13 @@ function updateProg(){const n=SEGS.filter(s=>cur(s).flown).length;document.getEl
   const p=document.getElementById("pend");p.style.display=queue.length?"inline-block":"none";p.textContent=`${queue.length} change${queue.length>1?"s":""} waiting to sync`}
 function renderList(){
   const list=day?SEGS.filter(s=>s.d===day):SEGS;updateProg();
-  const mins=list.reduce((a,s)=>a+s.t,0);
-  document.getElementById("sum").textContent=day?`Day ${day} · KP ${kp(list[0].a)}–${kp(list[list.length-1].b)} · ${list.length} points · ~${mins.toFixed(0)} min flight`:`Full plan · ${list.length} launch points · select a day above`;
+  const mins=list.reduce((a,s)=>a+s.t,0);const lenM=list.reduce((a,s)=>a+(s.b-s.a),0);
+  document.getElementById("sum").textContent=day?`Day ${day} · KP ${kp(list[0].a)}–${kp(list[list.length-1].b)} · ${list.length} points · ${lenM.toLocaleString()} m to fly · ~${mins.toFixed(0)} min flight`:`Full plan · ${list.length} launch points · ${lenM.toLocaleString()} m to fly · select a day above`;
   const box=document.getElementById("list");box.innerHTML="";
   list.forEach(s=>{const c=cur(s);const r=el("div",{className:"row"+(c.flown?" done":"")+(selId===s.id?" sel":"")});
     const d=me?" · "+fmtDist(dist(me,{lat:c.lat,lng:c.lon})):"";
     r.innerHTML=`<input type="checkbox" aria-label="Flown ${s.id}" ${c.flown?"checked":""}>
-      <div><div class="t"><span class="dot" style="background:${COLORS[s.d-1]}"></span>${s.id}${moved(s)?" 📌":""}</div><div class="s">KP ${kp(s.a)}–${kp(s.b)} · ${s.t} min · Batt #${s.bat}${c.flown?" · Flown "+c.date:""}${d}</div>${c.note?`<div class="n"></div>`:""}</div>
+      <div><div class="t"><span class="dot" style="background:${COLORS[s.d-1]}"></span>${s.id}${moved(s)?" 📌":""}</div><div class="s">KP ${kp(s.a)}–${kp(s.b)} · <b>${segLen(s)}</b> · ${s.t} min · Batt #${s.bat}${c.flown?" · Flown "+c.date:""}${d}</div>${c.note?`<div class="n"></div>`:""}</div>
       <a class="gm" href="${gmPin(s)}" target="_blank" rel="noopener">📍 Maps</a>`;
     if(c.note)r.querySelector(".n").textContent="📝 "+c.note;
     r.querySelector("input").onclick=e=>{e.stopPropagation();send({point:s.id,flown:e.target.checked})};
