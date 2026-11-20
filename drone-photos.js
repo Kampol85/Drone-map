@@ -62,6 +62,7 @@
   }
 
   function start() {
+    var VER = "";
     var gmap = map, items = [], markers = [], visible = true, cur = -1;
     css();
 
@@ -89,14 +90,14 @@
       cur = (i + items.length) % items.length;
       var p = items[cur];
       load.style.display = "block";
-      img.src = p.src; img.alt = p.clip + " KP " + p.kp;
-      bOpen.href = p.src;
+      img.src = p.src + VER; img.alt = p.clip + " KP " + p.kp;
+      bOpen.href = p.src + VER;
       cap.innerHTML = "KP " + p.kp + " · " + p.clip + " · t=" + p.t + "s" +
         "<small>" + (p.day || "") + " · ภาพ " + (cur + 1) + "/" + items.length +
         " · alt " + p.alt + " m · " + p.lat.toFixed(6) + ", " + p.lng.toFixed(6) + "</small>";
       markers.forEach(function (m, k) { m.setIcon(icon(items[k].yaw, k === cur)); m.setZIndex(k === cur ? 999 : 50); });
       // preload neighbours
-      [cur + 1, cur - 1].forEach(function (k) { var q = items[(k + items.length) % items.length]; if (q) { var im = new Image(); im.src = q.src; } });
+      [cur + 1, cur - 1].forEach(function (k) { var q = items[(k + items.length) % items.length]; if (q) { var im = new Image(); im.src = q.src + VER; } });
       view.classList.add("on");
       markRow();
     }
@@ -155,7 +156,7 @@
     chk.onchange = function () { visible = chk.checked; update(); };
     q.oninput = renderList; dsel.onchange = renderList;
 
-    function thumb(src) { return src.replace(/^photos\//, "photos/thumbs/"); }
+    function thumb(src) { return src.replace(/^photos\//, "photos/thumbs/") + VER; }
     function dayKey(p) { return p.day || "—"; }
     function dayNum(d) { var m = /Day\s*(\d+)/i.exec(d); return m ? +m[1] : 999; }
     function markRow(scroll) {
@@ -209,6 +210,7 @@
     fetch(DATA_URL, { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (d) {
+        VER = d.v ? ("?v=" + d.v) : "";
         items = (d.photos || d).slice().sort(function (a, b) { return kpNum(a.kp) - kpNum(b.kp) || a.t - b.t; });
         btn.innerHTML = "📷 ภาพโดรน (" + items.length + ")";
         var days = []; items.forEach(function (p) { var d = dayKey(p); if (days.indexOf(d) < 0) days.push(d); });
